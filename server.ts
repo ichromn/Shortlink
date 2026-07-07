@@ -564,9 +564,14 @@ async function startServer() {
     });
   }
 
-  app.listen(PORT, "0.0.0.0", () => {
-    console.log(`Express server running on http://localhost:${PORT}`);
-  });
+  // Only start the listening server if we are NOT running in a Vercel Serverless Function
+  if (!process.env.VERCEL) {
+    app.listen(PORT, "0.0.0.0", () => {
+      console.log(`Express server running on http://localhost:${PORT}`);
+    });
+  }
 }
 
 startServer();
+
+export default app;
