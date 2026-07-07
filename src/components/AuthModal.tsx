@@ -1,7 +1,12 @@
 import React, { useState } from "react";
-import { X, Mail, Lock, AlertCircle, Loader2 } from "lucide-react";
+import { X, Mail, Lock, AlertCircle, Loader2, Chrome } from "lucide-react";
 import { auth } from "../lib/firebase";
-import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from "firebase/auth";
+import { 
+  signInWithEmailAndPassword, 
+  createUserWithEmailAndPassword,
+  signInWithPopup,
+  GoogleAuthProvider
+} from "firebase/auth";
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -73,9 +78,35 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }: AuthModalP
         setError("Email atau kata sandi salah.");
       } else if (err.code === "auth/invalid-email") {
         setError("Format alamat email tidak valid.");
+      } else if (err.code === "auth/operation-not-allowed") {
+        setError("Metode pendaftaran Email/Sandi belum diaktifkan di Firebase Console. Silakan aktifkan di Firebase Console > Authentication > Sign-in method, atau gunakan tombol 'Masuk dengan Google' di bawah.");
       } else {
         setError(err.message || "Gagal masuk atau mendaftar.");
       }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGoogleSignIn = async () => {
+    setError("");
+    setLoading(true);
+    try {
+      const provider = new GoogleAuthProvider();
+      const credential = await signInWithPopup(auth, provider);
+      
+      // Always register user profile in Firestore backend
+      await fetch("/api/users/profile", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ uid: credential.user.uid, email: credential.user.email })
+      });
+
+      onAuthSuccess();
+      onClose();
+    } catch (err: any) {
+      console.error("Google Auth error:", err);
+      setError(err.message || "Gagal masuk dengan Google.");
     } finally {
       setLoading(false);
     }
@@ -168,6 +199,27 @@ export default function AuthModal({ isOpen, onClose, onAuthSuccess }: AuthModalP
             )}
           </button>
         </form>
+
+        {/* Divider */}
+        <div className="relative my-4">
+          <div className="absolute inset-0 flex items-center" aria-hidden="true">
+            <div className="w-full border-t border-slate-200"></div>
+          </div>
+          <div className="relative flex justify-center text-xs text-slate-500 uppercase">
+            <span className="bg-white px-2">Atau</span>
+          </div>
+        </div>
+
+        {/* Google Sign-In */}
+        <button
+          type="button"
+          onClick={handleGoogleSignIn}
+          disabled={loading}
+          className="w-full h-11 inline-flex items-center justify-center px-4 py-2 border border-slate-200 text-sm font-medium rounded-xl text-slate-700 bg-white hover:bg-slate-50 active:scale-98 transition shadow-sm disabled:opacity-75 disabled:cursor-not-allowed"
+        >
+          <Chrome className="h-4 w-4 mr-2 text-indigo-600" />
+          <span>Masuk / Daftar dengan Google</span>
+        </button>
 
         {/* Toggle */}
         <div className="text-center mt-6 text-sm text-slate-500">
