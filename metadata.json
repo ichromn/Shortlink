@@ -1,0 +1,6 @@
+{
+  "name": "Pemendek Tautan dan Analitik",
+  "description": "Aplikasi pemendek tautan modern dengan analitik real-time, kustomisasi alias, masa berlaku tautan, login riwayat terpusat, generator QR code, ekspor CSV, dan API pengembang.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
